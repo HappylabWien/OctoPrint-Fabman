@@ -1,9 +1,6 @@
-﻿# 2019-11-11
+﻿# 2019-11-13
 # New:
-# * added printing_price_per_hour
-# * added charge_partial_jobs
-# also affected: fabmanConfig.py, /boot/fabman-config.txt
-# reboot necessary to add parameters to config.yaml
+# * tidy up code
 
 import json
 import requests
@@ -20,12 +17,6 @@ import os.path
 from os import path
 
 logging.basicConfig(stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO) # set level to DEBUG to lo all messages
-
-#octoprint_api_token = '76107D76377D46D29D844CA9A3C839E8'
-#octoprint_api_url_base = 'http://localhost/api/'
-
-#fabman_api_token = '8c2b2746-d235-4f7e-b525-9438b52a4c31' # put your fabman bridge api key here!
-#fabman_api_url_base = 'https://internal.fabman.io/api/v1/'
 
 configFile = '/boot/fabman-config.txt' # config file in boot partition will be checked at startup of the raspberry pi
 yamlFile = '/home/pi/.octoprint/config.yaml'
@@ -50,11 +41,6 @@ except Exception as e:
 	logging.fatal("Cannot find all parameters in " + yamlFile + " ("  + str(e) + ')')
 	sys.exit(0)
 
-#print 'octoprint_api_token: ' + octoprint_api_token
-#print 'octoprint_api_url_base: ' + octoprint_api_url_base
-#print 'fabman_api_token: ' + fabman_api_token
-#print 'fabman_api_url_base: ' + fabman_api_url_base
-
 octoprint_headers = {'Content-Type': 'application/json',
            'X-Api-Key': '{0}'.format(octoprint_api_token)}
 
@@ -72,28 +58,10 @@ def bridge_access(mode, emailAddress, metadata=False):
 			reset_idleTime()
 			bridge_setIdle()
 			logging.info('Bridge started')
-		if (mode == 'extend'): 
-			logging.debug('mode = extend')
-			sessionId = get_sessionId()
-			if sessionId == '0': # no open session, therefore nothing to do
-				logging.debug('Can\'t extend. No open session.')
-				return False
-			#pprint (metadata)
-			if (metadata == False or metadata["progress"]["completion"] == None): # do not set metadata if no data available
-				data = {'emailAddress': emailAddress, 'configVersion': 0, "currentSession": { "id": sessionId } }
-				logging.debug("No metadata to set")
-			else: # set metadata, if available
-				logging.info("Update Metadata")
-				#pprint (metadata)
-				try:
-					data = {'emailAddress': emailAddress, 'configVersion': 0, "currentSession": { "id": sessionId, "metadata": metadata, "charge": create_charge(get_metadata()) } }
-				except: # no   data available
-					data = {'emailAddress': emailAddress, 'configVersion': 0, "currentSession": { "id": sessionId, "metadata": metadata } }
 				
 		response = requests.post(api_url, headers=fabman_headers, json=data)
 		
-		#if response.status_code == 200 and json.loads(response.content.decode('utf-8'))['type'] == "allowed":
-		if (response.status_code == 200 and (json.loads(response.content.decode('utf-8'))['type'] == "allowed" or mode == 'extend')):
+		if (response.status_code == 200 and json.loads(response.content.decode('utf-8'))['type'] == "allowed"):
 			put_sessionId(str(json.loads(response.content.decode('utf-8'))["sessionId"]))
 			return json.loads(response.content.decode('utf-8'))
 		else:
@@ -231,8 +199,7 @@ def reset_pause():
 
 def bridge_setIdle():
 	try:
-		# if fabman.pause enthält NICHT 0 -> ist bereits Idle -> nichts tun!
-		if (get_pause() == 0):
+		if (bridge_isBusy()):
 			set_pause()
 			logging.info('Set Bridge state to IDLE')
 		return True
@@ -242,11 +209,8 @@ def bridge_setIdle():
 
 def bridge_setBusy():
 	try:
-		if (get_pause() != 0):
-			# calculate duration of pause and add it to fabman.idleTime
-			ts_resume = time.time()
-			idleTime = int(read_idleTime()) + int(ts_resume - get_pause())
-			put_idleTime(idleTime)
+		if (bridge_isIdle()):
+			put_idleTime(get_idleTime())
 			reset_pause()
 			logging.info('Set Bridge state to BUSY')
 		return True
@@ -290,9 +254,6 @@ def cancel_job():
 		data = {"command" : "cancel"}
 		response = requests.post(api_url, headers=octoprint_headers, json=data)
 		if response.status_code == 204:
-			#send_gcode("M117 Job cancelled")
-			#time.sleep(3)
-			#send_gcode("M117 Login with Fabman")
 			return True
 		else:
 			return False
@@ -306,9 +267,6 @@ def pause_job():
 		data = {"command" : "pause", "action" : "pause"}
 		response = requests.post(api_url, headers=octoprint_headers, json=data)
 		if response.status_code == 204:
-			#send_gcode("M117 Job canelled")
-			#time.sleep(3)
-			#send_gcode("M117 Login with Fabman")
 			return True
 		else:
 			return False
@@ -322,9 +280,6 @@ def resume_job():
 		data = {"command" : "pause", "action" : "resume"}
 		response = requests.post(api_url, headers=octoprint_headers, json=data)
 		if response.status_code == 204:
-			#send_gcode("M117 Job canelled")
-			#time.sleep(3)
-			#send_gcode("M117 Login with Fabman")
 			return True
 		else:
 			return False
@@ -365,24 +320,13 @@ def reset_idleTime():
 		logging.error('Function reset_idleTime raised exception (' + str(e) + ')')
 		return False
 
-def read_idleTime(): # reads value from file fabman.idleTime
-	try:
-		f = open("/home/pi/fabman/session/fabman.idleTime", "r")
-		idle_time = int(f.read())
-		return idle_time
-	except Exception as e: 
-		logging.error('Function get_idleTime raised exception (' + str(e) + ')')
-		return False
-
 def get_idleTime(): # reads value from file fabman.idleTime and adds current pause
 	try:
 		if (bridge_isOn()):
-			idle_time = read_idleTime()
+			f = open("/home/pi/fabman/session/fabman.idleTime", "r")
+			idle_time = int(f.read())
 			if (bridge_isIdle()): # if state is currently idle, then add time since pause started
-				ts_pause = get_pause()
-				#print "pause = " + str(ts_pause)
 				idle_time += (int(time.time()) - int(get_pause()))
-				#print "idle =  " + str(idle_time)
 			return idle_time
 		else:
 			return 0
@@ -470,75 +414,12 @@ def get_metadata():
 	global printing_price_per_hour
 	try:
 		metadata = get_job_info()
-		# costestimation plugin wird nicht mehr verwendet
-		#metadata['costestimation'] = get_octoprint_settings()['plugins']['costestimation']
 		if (filament_price_per_meter > 0.0 or printing_price_per_hour > 0.0):
 			metadata['charge'] = create_charge(metadata)
 		return metadata
 	except Exception as e: 
 		logging.error('Function get_metadata raised exception (' + str(e) + ')')
 		return False
-
-'''
-def create_charge_costestimation(metadata): # based on Plugin Cost Estimation
-	try:
-		#seconds = metadata['job']['estimatedPrintTime'] # charge according to estimated print time
-		#seconds = float(metadata['progress']['printTime']) + float(metadata['progress']['printTimeLeft']) # charge according to dynamically adjusted time estimation (from plugin "genius")
-		seconds = float(metadata['progress']['printTime']) / float(metadata['progress']['completion']) * 100.0 # charge according to dynamically adjusted time estimation (from plugin "genius")
-		if (seconds == None):
-			seconds = 0
-	except Exception as e: 
-		logging.info("No job duration available -> set seconds to 0")
-		seconds = 0
-	try:
-		ccm = metadata['job']['filament']['tool0']['volume']
-	except Exception as e: 
-		logging.debug("cannot fetch volume data in metadata for charging -> set ccm to 0 ("  + str(e) + ')')
-		ccm = 0
-		
-	try:
-		completion = metadata['progress']['completion']
-		if (completion == None):
-			completion = 0.0
-		#print completion
-		costOfFilament = float(metadata['costestimation']['costOfFilament'])
-		weightOfFilament = float(metadata['costestimation']['weightOfFilament'])
-		densityOfFilament = float(metadata['costestimation']['densityOfFilament'])
-		#diameterOfFilament = float(metadata['costestimation']['diameterOfFilament'])
-
-		if (densityOfFilament > 0):
-			filamentCost = ccm / (weightOfFilament/densityOfFilament) * costOfFilament
-			#print filamentCost
-		else:
-			#print "Division by Zero (filamentCost)"
-			logging.debug('densityOfFilament is not set -> set filamentCost to 0')
-			filamentCost = 0.0
-
-		costOfElectricity = float(metadata['costestimation']['costOfElectricity'])
-		powerConsumption = float(metadata['costestimation']['powerConsumption'])
-		timebasedCost = float(seconds)/3600 * powerConsumption * costOfElectricity
-
-		maintenanceCosts = float(metadata['costestimation']['maintenanceCosts'])
-		lifespanOfPrinter = float(metadata['costestimation']['lifespanOfPrinter'])
-		priceOfPrinter = float(metadata['costestimation']['priceOfPrinter'])
-		if (lifespanOfPrinter > 0 and maintenanceCosts > 0):
-			printerCost = (seconds / (lifespanOfPrinter*3600) * priceOfPrinter) + (seconds/3600 * maintenanceCosts)
-			#print printerCost
-		else:
-			#print "Division by Zero (printerCost)"
-			logging.debug('lifespanOfPrinter and/or maintenanceCosts is not set -> set printerCost to 0')
-			printerCost = 0.0
-		
-		price = (filamentCost + timebasedCost + printerCost) * (completion/100)
-		
-		#description = 'Print job "' + str(metadata['job']['file']['name']) + '" on ' + get_equipmentName() + ' (' + str(int(round(seconds))) + 's / ' + str(round(ccm,2)) + 'ccm / ' + str(round(completion,2)) + '% completed)'
-		description = 'Print job "' + str(metadata['job']['file']['name']) + ' (' + str(int(round(seconds))) + 's / ' + str(round(ccm,2)) + 'ccm / ' + str(round(completion,2)) + '% completed)'
-		charge = {'price' : price, 'description': description }
-		return charge
-	except Exception as e: 
-		logging.error('Function create_charge raised exception (' + str(e) + ')')
-		return False
-'''
 
 def create_charge(metadata): # based on filament usage or time (price set in /boot/fabman-config.txt)
 	global filament_price_per_meter
@@ -598,12 +479,6 @@ def fabmanConfig(sectionName, parameterName):
 	if (sectionName == 'fabman'):
 		yamlSection = 'plugins'
 		yamlSubsection = 'fabman'
-	'''
-	try:
-		configYaml['plugins']['fabman']
-	except Exception as e: 
-		configYaml[yamlSection].update( { 'fabman' : { } } )
-	'''		
 	try:
 		fabmanConfig[sectionName][parameterName]
 		src = True
@@ -614,9 +489,6 @@ def fabmanConfig(sectionName, parameterName):
 		dst = True
 	except Exception as e: 
 		dst = False
-
-	#print fabmanConfig[sectionName][parameterName].split(",")
-	#print str(configYaml[yamlSection][yamlSubsection][parameterName])
 
 	try:
 		if (sectionName == 'bridge' and parameterName == 'name'):
@@ -672,47 +544,42 @@ def fabmanConfig(sectionName, parameterName):
 		logging.info('Function fabmanConfig raised exception (' + str(e) + ')')
 
 def bridge_start(userName):
-#if (sys.argv[1] == 'start'):
-	response = bridge_access('start', userName) # Parameter: 'start', <username>
-	put_userName(userName)
-	set_start()
-	#pprint(response)
-		
-	if (response == False): # access failed, e.g. user has no permission
-		# cancel print
-		logging.info('No permission to print -> cancel job')
-		cancel_job()
-		send_gcode("M117 Access denied!")
-		time.sleep(5)
-		send_gcode("M117 Login with Fabman")
-	else:
-		# start in idle-mode (waiting for user to press knob)
-		reset_pause()
-		bridge_setIdle()
-		
-		#send_gcode("M1 Press knob ...") # hat nicht fortgesetzt bei knopfdruck, daher: configured in gui -> Settings / GCODE Scritps / Before print job starts 
-		
-def bridge_extend(userName, metadata=False):
-#if (sys.argv[1] == 'extend'):
-	#response = bridge_access('extend', userName) # Parameter: 'extend', <username>
-	put_userName(userName)
-	#pprint(response)
+	try:
+		put_sessionId('0')
+		sessionId = '0'
+		reset_idleTime()
 
-	if (bridge_access('extend', userName, metadata)): # bridge is on (bridge session active)
-		#update_metadata(metadata)
-		''' ######## busy/idle detection wird jetzt von daemon gemacht ############
-		if (metadata["state"][0:8] == "Printing" and metadata["progress"]["printTime"] > 0): # bridge state "busy": printing has started (made progress already)
-			logging.debug("Fabman Bridge is ON (BUSY)")
-			#send_gcode("M117 Fabman Bridge busy")
-			bridge_setBusy()
-		else: # bridge state "idle": not printing
-			logging.debug("Fabman Bridge is ON (IDLE)")
-			#send_gcode("M117 Fabman Bridge idle")
-			bridge_setIdle()		
-		'''
-	else: # bridge is off
-		#send_gcode("M117 Fabman Bridge off")
-		logging.debug("Fabman Bridge is OFF")
+		bridge_setIdle()
+
+		api_url = '{0}bridge/access'.format(fabman_api_url_base)
+		data = {'emailAddress': userName, 'configVersion': 0}
+		response = requests.post(api_url, headers=fabman_headers, json=data)
+
+		put_userName(userName)
+		set_start()
+		
+		if (response.status_code == 200 and json.loads(response.content.decode('utf-8'))['type'] == "allowed"):
+			logging.info('Bridge started')
+			put_sessionId(str(json.loads(response.content.decode('utf-8'))["sessionId"]))
+			response = json.loads(response.content.decode('utf-8'))
+
+			# start in idle-mode (waiting for user to press knob)
+			reset_pause()
+			bridge_setIdle()
+
+		else: # access failed, e.g. user has no permission
+			logging.info('Bridge could not be started (access denied)')
+
+			# cancel print
+			logging.info('No permission to print -> cancel job')
+			cancel_job()
+			send_gcode("M117 Access denied!")
+			time.sleep(5)
+			send_gcode("M117 Login with Fabman")
+
+	except Exception as e: 
+		logging.error('Function bridge_start raised exception (' + str(e) + ')')
+		return False
 
 def bridge_stop(): 
 	try:
@@ -842,5 +709,13 @@ def reset_start():
 		logging.error('Function reset_start raised exception (' + str(e) + ')')
 		return False
 
-
+def printer_isOffline(metadata):
+	try:
+		if (str(metadata["state"][0:7]) == "Offline" or str(metadata["state"][0:5]) == "Error"):
+			return True
+		else:
+			return False
+	except Exception as e: 
+		logging.error('Function printer_isOffline raised exception (' + str(e) + ')')
+		return False
 
