@@ -10,6 +10,8 @@
 <li style="font-weight: 400;"><span style="font-weight: 400;">Fabman Account (you can get your free trial account </span><a href="https://fabman.io"><span style="font-weight: 400;">here</span></a><span style="font-weight: 400;">)</span></li>
 <li style="font-weight: 400;"><span style="font-weight: 400;">WiFi and Internet connection</span></li>
 </ul>
+<h2><span style="font-weight: 400;">What is Fabman?</span></h2>
+<p><span style="font-weight: 400;">Fabman is an all-in-one makerspace management solution. It is the "operating system" for makerspaces, fab labs, coworking spaces or school workshops. It helps to manage machines and members easily, safely & efficiently.</span></p>
 <h2><span style="font-weight: 400;">Why OctoPrint?</span></h2>
 <p><span style="font-weight: 400;">OctoPrint is a very powerful web-based tool to manage 3d printers. It's 100% open source and supports a </span><a href="https://github.com/foosel/OctoPrint/wiki/Supported-Printers"><span style="font-weight: 400;">wide range of 3d printers</span></a><span style="font-weight: 400;"> - including Prusa, RepRap, Ultimaker, etc. So, if we support Octoprint, we immediately support all of them.</span></p>
 <h2><span style="font-weight: 400;">Why connect 3D printers to Fabman?</span></h2>
