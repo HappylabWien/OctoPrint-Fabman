@@ -17,6 +17,11 @@ try:
 except:
 	progressOld = 0.0
 
+try:
+	bridge_stop()
+except Exception as e: 
+	logging.error('Daemon raised exception during initialization (' + str(e) + ')')
+	
 while 1:
 	try:
 		metadata = get_metadata()
@@ -45,11 +50,11 @@ while 1:
 		if (metadata is not False):
 			if (printer_isOffline(metadata)):
 				octoprint_connect()
-			if metadata is not False: 
+			if (bridge_isOn()): 
 				logging.info("State: " + str(metadata["state"]) + " (Progress:" + str(metadata["progress"]["completion"]) + ")")
 				bridge_update(metadata)
 			else:
-				logging.error('get_metadata: Request Failed')
+				logging.debug('Bridge is off -> cannot update metadata')
 		else:
 			logging.warning("No metadata available")
 	except Exception as e: 

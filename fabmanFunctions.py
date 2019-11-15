@@ -1,6 +1,9 @@
-﻿# 2019-11-13
+﻿# 2019-11-15
 # New:
 # * tidy up code
+# * state update in metadata when job finished
+# * add pricing settings to metadata
+# * write metadata immediately after start
 
 import json
 import requests
@@ -47,6 +50,7 @@ octoprint_headers = {'Content-Type': 'application/json',
 fabman_headers = {'Content-Type': 'application/json',
            'Authorization': 'Bearer {0}'.format(fabman_api_token)}
 
+'''
 def bridge_access(mode, emailAddress, metadata=False):
 	try:
 		api_url = '{0}bridge/access'.format(fabman_api_url_base)
@@ -69,6 +73,7 @@ def bridge_access(mode, emailAddress, metadata=False):
 	except Exception as e: 
 		logging.error('Function bridge_access raised exception (' + str(e) + ')')
 		return False
+'''
 
 def get_sessionId():
 	try:
@@ -387,6 +392,7 @@ def octoprint_disconnect():
 		logging.error('Function octoprint_disconnect raised exception (' + str(e) + ')')
 		return False
 
+'''
 def octoprint_reconnect():
 	try:
 		octoprint_disconnect()
@@ -395,6 +401,7 @@ def octoprint_reconnect():
 	except Exception as e: 
 		logging.error('Function octoprint_reconnect raised exception (' + str(e) + ')')
 		return False
+'''
 
 def get_octoprint_settings():
 	try:
@@ -412,8 +419,13 @@ def get_octoprint_settings():
 def get_metadata():
 	global filament_price_per_meter
 	global printing_price_per_hour
+	global charge_partial_jobs
 	try:
 		metadata = get_job_info()
+		metadata['state'] = get_printerState()
+		metadata['pricing'] = { 'filament_price_per_meter' : filament_price_per_meter,
+								'printing_price_per_hour' : printing_price_per_hour,
+								'charge_partial_jobs' : charge_partial_jobs }
 		if (filament_price_per_meter > 0.0 or printing_price_per_hour > 0.0):
 			metadata['charge'] = create_charge(metadata)
 		return metadata
@@ -549,8 +561,6 @@ def bridge_start(userName):
 		sessionId = '0'
 		reset_idleTime()
 
-		bridge_setIdle()
-
 		api_url = '{0}bridge/access'.format(fabman_api_url_base)
 		data = {'emailAddress': userName, 'configVersion': 0}
 		response = requests.post(api_url, headers=fabman_headers, json=data)
@@ -566,6 +576,8 @@ def bridge_start(userName):
 			# start in idle-mode (waiting for user to press knob)
 			reset_pause()
 			bridge_setIdle()
+			
+			#bridge_update(get_metadata())
 
 		else: # access failed, e.g. user has no permission
 			logging.info('Bridge could not be started (access denied)')
@@ -583,6 +595,11 @@ def bridge_start(userName):
 
 def bridge_stop(): 
 	try:
+	
+		if (bridge_isOff()): # do nothing if bridge is off already
+			logging.debug('Bridge could not be stopped (is off already)')
+			return False
+			
 		sessionId = get_sessionId()
 		idleTime = get_idleTime()
 		metadata = get_metadata()
@@ -627,7 +644,8 @@ def bridge_update(metadata):
 		
 		api_url = '{0}bridge/update'.format(fabman_api_url_base)
 		
-		if (metadata == False or metadata["progress"]["completion"] == None): # do not set metadata if no data available
+		#if (metadata == False or metadata["progress"]["completion"] == None): # do not set metadata if no data available
+		if (metadata == False): # do not set metadata if no data available
 			data = { "session": { "id": sessionId, "idleDurationSeconds": idleTime } }
 		else: # set metadata, if available
 			try:
@@ -711,7 +729,7 @@ def reset_start():
 
 def printer_isOffline(metadata):
 	try:
-		if (str(metadata["state"][0:7]) == "Offline" or str(metadata["state"][0:5]) == "Error"):
+		if (str(metadata["state"][0:7]).upper() == "OFFLINE" or str(metadata["state"][0:5]).upper() == "ERROR"):
 			return True
 		else:
 			return False
