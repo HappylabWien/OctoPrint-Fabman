@@ -34,6 +34,10 @@ while 1:
 		logging.debug("Heartbeat")
 		bridgeData = bridge_heartbeat() 
 
+		# try to reconnect if printer is offline
+		if (printer_isOffline(metadata)):
+			octoprint_connect()
+
 		# Determine busy/idle state (check whether progress was made during the last daemon cycle)
 		if (bridge_isOn()):
 			logging.debug("Bridge is ON: Determine busy/idle state")
@@ -48,8 +52,6 @@ while 1:
 			logging.debug("Bridge is OFF")
 		
 		if (metadata is not False):
-			if (printer_isOffline(metadata)):
-				octoprint_connect()
 			if (bridge_isOn()): 
 				logging.info("State: " + str(metadata["state"]) + " (Progress:" + str(metadata["progress"]["completion"]) + ")")
 				bridge_update(metadata)
