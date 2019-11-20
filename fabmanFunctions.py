@@ -50,31 +50,6 @@ octoprint_headers = {'Content-Type': 'application/json',
 fabman_headers = {'Content-Type': 'application/json',
            'Authorization': 'Bearer {0}'.format(fabman_api_token)}
 
-'''
-def bridge_access(mode, emailAddress, metadata=False):
-	try:
-		api_url = '{0}bridge/access'.format(fabman_api_url_base)
-		
-		if (mode == 'start'): 
-			put_sessionId('0')
-			sessionId = '0'
-			data = {'emailAddress': emailAddress, 'configVersion': 0}
-			reset_idleTime()
-			bridge_setIdle()
-			logging.info('Bridge started')
-				
-		response = requests.post(api_url, headers=fabman_headers, json=data)
-		
-		if (response.status_code == 200 and json.loads(response.content.decode('utf-8'))['type'] == "allowed"):
-			put_sessionId(str(json.loads(response.content.decode('utf-8'))["sessionId"]))
-			return json.loads(response.content.decode('utf-8'))
-		else:
-			return False
-	except Exception as e: 
-		logging.error('Function bridge_access raised exception (' + str(e) + ')')
-		return False
-'''
-
 def get_sessionId():
 	try:
 		filename = "/home/pi/fabman/session/fabman.sessionId"
@@ -121,19 +96,6 @@ def put_printerState(printerState):
 		logging.error('Function put_printerState raised exception (' + str(e) + ')')
 		return False
 
-def put_userName(userName): # write username to file for fabmanDaemon.py
-	try:
-		if (len(sys.argv) == 3):
-			f = open("/home/pi/fabman/session/fabman.userName", "w")
-			f.write(userName)
-			f.close()
-			return True
-		else:
-			return False
-	except Exception as e: 
-		logging.error('Function put_userName raised exception (' + str(e) + ')')
-		return False
-
 def get_userName():
 	try:
 		filename = "/home/pi/fabman/session/fabman.userName"
@@ -147,6 +109,27 @@ def get_userName():
 		logging.error('Function get_userName raised exception (' + str(e) + ')')
 		return False
 
+def put_userName(userName): # write username to file for fabmanDaemon.py
+	try:
+		if (len(sys.argv) == 3):
+			f = open("/home/pi/fabman/session/fabman.userName", "w")
+			f.write(userName)
+			f.close()
+			return True
+		else:
+			return False
+	except Exception as e: 
+		logging.error('Function put_userName raised exception (' + str(e) + ')')
+		return False
+
+def get_equipmentName():
+	try:
+		f = open("/home/pi/fabman/session/fabman.equipmentName", "r")
+		return f.read()
+	except Exception as e: 
+		logging.error('Function get_equipmentName raised exception (' + str(e) + ')')
+		return False
+
 def put_equipmentName(equipmentName): # write equipmentName to file for use in charge description
 	try:
 		f = open("/home/pi/fabman/session/fabman.equipmentName", "w")
@@ -157,14 +140,6 @@ def put_equipmentName(equipmentName): # write equipmentName to file for use in c
 		logging.error('Function put_equipmentName raised exception (' + str(e) + ')')
 		return False
 		
-def get_equipmentName():
-	try:
-		f = open("/home/pi/fabman/session/fabman.equipmentName", "r")
-		return f.read()
-	except Exception as e: 
-		logging.error('Function get_equipmentName raised exception (' + str(e) + ')')
-		return False
-
 def get_pause():
 	try:
 		filename = "/home/pi/fabman/session/fabman.pause"
@@ -174,38 +149,26 @@ def get_pause():
 			f.close()
 			return ts_pause
 		else:
-			reset_pause()
+			put_pause("0")
 			return int(0)
 	except Exception as e: 
 		logging.error('Function get_pause raised exception (' + str(e) + ')')
 		return False
 
-def set_pause():
+def put_pause(pause = int(time.time())): # put_pause(0) to reset pause
 	try:
-		ts = time.time()
 		f = open("/home/pi/fabman/session/fabman.pause", "w")
-		f.write(str(int(time.time())))
+		f.write(str(pause))
 		f.close()
 		return True
 	except Exception as e: 
-		logging.error('Function set_pause raised exception (' + str(e) + ')')
-		return False
-
-def reset_pause():
-	try:
-		ts = time.time()
-		f = open("/home/pi/fabman/session/fabman.pause", "w")
-		f.write("0")
-		f.close()
-		return True
-	except Exception as e: 
-		logging.error('Function reset_pause raised exception (' + str(e) + ')')
+		logging.error('Function put_pause raised exception (' + str(e) + ')')
 		return False
 
 def bridge_setIdle():
 	try:
 		if (bridge_isBusy()):
-			set_pause()
+			put_pause()
 			logging.info('Set Bridge state to IDLE')
 		return True
 	except Exception as e: 
@@ -216,7 +179,7 @@ def bridge_setBusy():
 	try:
 		if (bridge_isIdle()):
 			put_idleTime(get_idleTime())
-			reset_pause()
+			put_pause("0")
 			logging.info('Set Bridge state to BUSY')
 		return True
 	except Exception as e: 
@@ -392,17 +355,6 @@ def octoprint_disconnect():
 		logging.error('Function octoprint_disconnect raised exception (' + str(e) + ')')
 		return False
 
-'''
-def octoprint_reconnect():
-	try:
-		octoprint_disconnect()
-		octoprint_connect()
-		return True
-	except Exception as e: 
-		logging.error('Function octoprint_reconnect raised exception (' + str(e) + ')')
-		return False
-'''
-
 def get_octoprint_settings():
 	try:
 		api_url = '{0}settings'.format(octoprint_api_url_base)
@@ -460,7 +412,10 @@ def create_charge(metadata): # based on filament usage or time (price set in /bo
 		if (charge_partial_jobs == False and completion != 100):
 			price = 0
 		
-		description = 'Print job "' + str(metadata['job']['file']['name']) + '" ' + str(round(completion,2)) + '% completed (' + str(round(meter,2)) + 'm filament / ' + str(seconds) + 's print time)' 
+		description = 'Print job "' + str(metadata['job']['file']['name']) + '" ' + str(round(completion,2)) + '% completed ('
+		if ((filament_price_per_meter > 0) or (meter > 0)):
+			description += str(round(meter,2)) + 'm filament / '
+		description += str(seconds) + 's print time)' 
 		charge = {'price' : price, 'description': description }
 		return charge
 	except Exception as e: 
@@ -574,7 +529,7 @@ def bridge_start(userName):
 			response = json.loads(response.content.decode('utf-8'))
 
 			# start in idle-mode (waiting for user to press knob)
-			reset_pause()
+			put_pause("0")
 			bridge_setIdle()
 			
 			#bridge_update(get_metadata())
@@ -605,7 +560,7 @@ def bridge_stop():
 		metadata = get_metadata()
 		
 		#bridge_setBusy() # to add last idle period before stopping the bridge
-		reset_pause()
+		put_pause("0")
 		
 		api_url = '{0}bridge/stop'.format(fabman_api_url_base)
 		
@@ -631,20 +586,13 @@ def bridge_stop():
 		logging.error('Function bridge_stop raised exception (' + str(e) + ')')
 		return False
 
-
 def bridge_update(metadata): 
 	try:
 		sessionId = get_sessionId()
-		#metadata = get_metadata()
 		idleTime = int(get_idleTime())
-		#ts_pause = int(get_pause())
-		#if (ts_pause != 0): # bridge is currently idle
-		#	ts_now = int(time.time())
-		#	idleTime = idleTime + (ts_now - ts_pause)
 		
 		api_url = '{0}bridge/update'.format(fabman_api_url_base)
 		
-		#if (metadata == False or metadata["progress"]["completion"] == None): # do not set metadata if no data available
 		if (metadata == False): # do not set metadata if no data available
 			data = { "session": { "id": sessionId, "idleDurationSeconds": idleTime } }
 		else: # set metadata, if available
@@ -652,12 +600,10 @@ def bridge_update(metadata):
 				data = { "session": { "id": sessionId, "idleDurationSeconds": idleTime, "metadata": metadata, "charge": create_charge(get_metadata()) } }
 			except: # no charge data available
 				data = { "session": { "id": sessionId, "idleDurationSeconds": idleTime, "metadata": metadata } }
-		#pprint(data)
 		response = requests.post(api_url, headers=fabman_headers, json=data)
 
 		if response.status_code == 200 or response.status_code == 204:
-			logging.info('Bridge data (metadata/charge) updated successfully')
-			#pprint(response)
+			logging.debug('Bridge data (metadata/charge) updated successfully')
 			return True
 		else:
 			logging.warning('Could not update bridge data (metadata/charge)')
@@ -665,9 +611,7 @@ def bridge_update(metadata):
 	except Exception as e: 
 		logging.error('Function bridge_update raised exception (' + str(e) + ')')
 		return False
-
 		
-################### NEUE FUNKTONEN #####################
 def bridge_isOn():
 	if (int(get_sessionId()) != 0):
 		return True

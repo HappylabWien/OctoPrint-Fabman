@@ -31,7 +31,7 @@ while 1:
 		progress = 0.0
 
 	try:
-		logging.debug("Heartbeat")
+		logging.info("Heartbeat")
 		bridgeData = bridge_heartbeat() 
 
 		# try to reconnect if printer is offline
