@@ -38,7 +38,7 @@ try:
 		bridge_stop()
 		octoprint_disconnect()
 	elif (newState == 'OPERATIONAL'): # printer available for new print (job finished, cancelled, etc.)
-		logging.info("Printer available for new print (job finished, cancelled, etc.) -> stop fabman session, if open")
+		logging.info("Printer available for new print")
 		bridge_stop()
 
 except Exception as e: 

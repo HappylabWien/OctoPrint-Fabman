@@ -155,11 +155,12 @@ def get_pause():
 		logging.error('Function get_pause raised exception (' + str(e) + ')')
 		return False
 
-def put_pause(pause = int(time.time())): # put_pause(0) to reset pause
+def put_pause(pause): # call put_pause(int(time.time())) respectively put_pause(0) to reset pause
 	try:
 		f = open("/home/pi/fabman/session/fabman.pause", "w")
 		f.write(str(pause))
 		f.close()
+		#print "XXXXXXXXXXXXXXX set pause to " + str(pause) + "(time now is " + str(int(time.time())) + ")"
 		return True
 	except Exception as e: 
 		logging.error('Function put_pause raised exception (' + str(e) + ')')
@@ -168,7 +169,7 @@ def put_pause(pause = int(time.time())): # put_pause(0) to reset pause
 def bridge_setIdle():
 	try:
 		if (bridge_isBusy()):
-			put_pause()
+			put_pause(int(time.time()))
 			logging.info('Set Bridge state to IDLE')
 		return True
 	except Exception as e: 
@@ -211,6 +212,7 @@ def get_job_info():
 		if response.status_code == 200:
 			return json.loads(response.content.decode('utf-8'))
 		else:
+			logging.info('No job data available')
 			return False
 	except Exception as e: 
 		logging.error('Function get_job_info raised exception (' + str(e) + ')')
@@ -295,6 +297,9 @@ def get_idleTime(): # reads value from file fabman.idleTime and adds current pau
 			idle_time = int(f.read())
 			if (bridge_isIdle()): # if state is currently idle, then add time since pause started
 				idle_time += (int(time.time()) - int(get_pause()))
+				#print 'Idle time is ' + str(idle_time) + ' (state is IDLE -> pause: ' + str(get_pause()) + ' / now: ' + str(int(time.time())) + ')'
+			#else:
+				#print 'Idle time is ' + str(idle_time) + ' (state is BUSY)'
 			return idle_time
 		else:
 			return 0
@@ -335,8 +340,10 @@ def octoprint_connect():
 			data = {"command" : "connect"}
 			response = requests.post(api_url, headers=octoprint_headers, json=data)
 			if response.status_code == 204:
+				logging.info('Successfully connected to printer')
 				return True
 			else:
+				logging.info('Connection to printer failed')
 				return False
 	except Exception as e: 
 		logging.error('Function octoprint_connect raised exception (' + str(e) + ')')
@@ -550,6 +557,7 @@ def bridge_start(userName):
 
 def bridge_stop(): 
 	try:
+		put_pause("0")
 	
 		if (bridge_isOff()): # do nothing if bridge is off already
 			logging.debug('Bridge could not be stopped (is off already)')
@@ -558,9 +566,6 @@ def bridge_stop():
 		sessionId = get_sessionId()
 		idleTime = get_idleTime()
 		metadata = get_metadata()
-		
-		#bridge_setBusy() # to add last idle period before stopping the bridge
-		put_pause("0")
 		
 		api_url = '{0}bridge/stop'.format(fabman_api_url_base)
 		
@@ -680,4 +685,3 @@ def printer_isOffline(metadata):
 	except Exception as e: 
 		logging.error('Function printer_isOffline raised exception (' + str(e) + ')')
 		return False
-

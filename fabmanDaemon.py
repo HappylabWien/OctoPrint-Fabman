@@ -18,6 +18,7 @@ except:
 	progressOld = 0.0
 
 try:
+	octoprint_connect()
 	bridge_stop()
 except Exception as e: 
 	logging.error('Daemon raised exception during initialization (' + str(e) + ')')
@@ -36,6 +37,7 @@ while 1:
 
 		# try to reconnect if printer is offline
 		if (printer_isOffline(metadata)):
+			logging.info('Printer is offline - trying to connect...')
 			octoprint_connect()
 
 		# Determine busy/idle state (check whether progress was made during the last daemon cycle)
