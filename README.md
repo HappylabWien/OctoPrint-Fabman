@@ -41,9 +41,7 @@ Installation Guide
 
 ### Install the adapted OctoPi image on the SD card
 
-I’ve made an image to get it up and running easily. As soon as I find time I’ll write a more detailed documentation.
-
-You can [download the image] - *(link to image coming soon)* (zip-file, ca. 7 GB) and flash it on an SD card. Therefore, ***follow the instructions 1. to 5. in Section “Setting up OctoPi” [here](https://octoprint.org/download/)***. Use the image mentioned above instead of the image provided on the OctoPi website.
+As soon as I find time I’ll write a more detailed documentation. You can [download the image] - *(link to image coming soon)* (zip-file, ca. 7 GB) and flash it on an SD card. Therefore, ***follow the instructions 1. to 5. in Section “Setting up OctoPi” [here](https://octoprint.org/download/)***. Use the image mentioned above instead of the image provided on the OctoPi website.
 
 ### Configure your installation
 
@@ -92,12 +90,12 @@ filament_price_per_meter = 0.55
 printing_price_per_hour = 1.2
 charge_partial_jobs = true
 ```
-The highlighted values have to be set according to your installation:
-- accountId and resourceIds: Login to your Fabman account. Go to Configure / Equipment and select the 3D printer. You find the data in the URL (https://fabman.io/manage/<accountId>/configuration/resources/<resourceId>
-- `fabman_api_token`: Find [here](https://help.fabman.io/article/32-create-a-bridge-api-key) how to create the API token
-- `filament_price_per_meter`: If you plan to charge according to filament used, set the price per meter here. If you do not need this feature, set the price to `0` (do not delete the parameter).
-- `printing_price_per_hour`:  If you plan to charge according to printing time, set the price per hour here. Heat up time or pauses are not counted. If you do not need this feature, set the price to `0` (do not delete the parameter).
-- `Charge_partial_jobs`: Set `true`, if you want to charge uncompleted/cancelled jobs aliquotely. Set `false`, if only 100% completed job shall be charged.
+The following values have to be set according to your installation:
+- `[octoprint-fabman-auth]` / `accountId` and `resourceIds`: Login to your Fabman account. Go to Configure / Equipment and select the 3D printer. You find the data in the URL (https://fabman.io/manage/<accountId>/configuration/resources/<resourceId>
+- `[fabman]` / `fabman_api_token`: Find [here](https://help.fabman.io/article/32-create-a-bridge-api-key) how to create the API token
+- `[fabman]` / `filament_price_per_meter`: If you plan to charge according to filament used, set the price per meter here. If you do not need this feature, set the price to `0` (do not delete the parameter).
+- `[fabman]` / `printing_price_per_hour`:  If you plan to charge according to printing time, set the price per hour here. Heat up time or pauses are not counted. If you do not need this feature, set the price to `0` (do not delete the parameter).
+- `[fabman]` / `Charge_partial_jobs`: Set `true`, if you want to charge uncompleted/cancelled jobs aliquotely. Set `false`, if only 100% completed job shall be charged.
 
 #### Octoprint Settings
 Connect the Raspberry Pi via USB to the Prusa printer, insert the SD card into the Raspberry Pi card slot, and power it on. It can take a few minutes to boot completely.
