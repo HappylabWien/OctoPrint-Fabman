@@ -41,7 +41,7 @@ Installation Guide
 
 ### Install the adapted OctoPi image on the SD card
 
-As soon as I find time I’ll write a more detailed documentation. You can [download the image] - *(link to image coming soon)* (zip-file, ca. 7 GB) and flash it on an SD card. Therefore, ***follow the instructions 1. to 5. in Section “Setting up OctoPi” [here](https://octoprint.org/download/)***. Use the image mentioned above instead of the image provided on the OctoPi website.
+As soon as I find time I’ll write a more detailed documentation. You can [download the image](https://drive.google.com/file/d/1fgGlbhjOgSsZBqq6AhLT7e_BjqS5w5e3/view?usp=sharing) (zip-file, ca. 7 GB) and flash it on an SD card. Therefore, ***follow the instructions 1. to 5. in Section “Setting up OctoPi” [here](https://octoprint.org/download/)***. Use the image mentioned above instead of the image provided on the OctoPi website.
 
 ### Configure your installation
 
@@ -124,3 +124,12 @@ Keep your Installation up to date
 - go to the fabman directory: `cd /home/pi/fabman`
 - get newest version: `git pull origin master`
 - restart octoprint: `sudo service octoprint restart` (you will be asked for the password of the user pi)
+
+How to Start a Print Job
+------------------------
+
+1. Open a web browser and go to [`http://printer.local`](http://printer.local)  (use here the server name you have set in `/boot/octopi-hostname.txt`) and log in with the username (email address) and password of the Fabman Member Portal
+2. Upload the GCODE file - created with the [PrusaSlicer](https://www.prusa3d.com/prusaslicer/)
+3. Click the Printer-Icon in the List to send the job to the printer. After the beep, start printing directly at the printer by pressing the knob.
+
+![OctoPrint-Screenshot](OctoPrint-Screenshot.png)
