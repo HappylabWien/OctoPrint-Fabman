@@ -26,9 +26,9 @@ OctoPrint is a very powerful web-based tool to manage 3d printers. It's 100% ope
 
 The main features and advantages of this configuration are:
 
-- Permission management: You can control via Fabman who is allowed to print
-- Logging: You see all your printing activities at one sight in the Fabman dashboard
-- Billing: You can automatically charge according to actual usage of the printer. Time and filament based charges are supported.
+- ***Permission management:*** You can control via Fabman who is allowed to print
+- ***Logging:*** You see all your printing activities at one sight in the Fabman dashboard
+- ***Billing:*** You can automatically charge according to actual usage of the printer. Time and filament based charges are supported.
 
 ### How to use the OctoPrint with Fabman?
 
