@@ -42,3 +42,10 @@ Installation Guide
 **I'm currently setting up this repository. An installation guide will be provided here soon. Thank you for your patience.**
 
 If you cannot wait any longer, please [contact me](mailto:info@happylab.at) directly.
+
+Keep your Installation up to date
+---------------------------------
+- Login to your Raspberry Pi via ssh (user pi)
+- go to the fabman directory: `cd /home/pi/fabman`
+- get newest version: `git pull origin master`
+- restart octoprint: `sudo service octoprint restart` (you will be asked for the password of the user pi)
