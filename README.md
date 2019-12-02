@@ -11,7 +11,7 @@ To implement this you need:
 - Prusa MK3 printer
 - Raspberry PI 3
 - Micro SD card (min. 8GB)
-- Fabman Account (you can get your free trial account here)
+- Fabman Account (you can get your free trial account [here](https://fabman.io))
 - WiFi and Internet connection
 
 ### What is Fabman?
