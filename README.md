@@ -132,4 +132,4 @@ How to Start a Print Job
 2. Upload the GCODE file - created with the [PrusaSlicer](https://www.prusa3d.com/prusaslicer/)
 3. Click the Printer-Icon in the List to send the job to the printer. After the beep, start printing directly at the printer by pressing the knob.
 
-![OctoPrint-Screenshot](OctoPrint-Screenshot.png)
+![OctoPrint-Screenshot](https://raw.githubusercontent.com/HappylabWien/OctoPrint-Fabman/master/OctoPrint-Screenshot.PNG)
