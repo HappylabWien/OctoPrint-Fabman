@@ -39,9 +39,7 @@ You can then upload your 3d print file (GCODE file) and send it to the printer. 
 Installation Guide
 ------------------
 
-**I'm currently setting up this repository. An installation guide will be provided here soon. Thank you for your patience.**
-
-If you cannot wait any longer, please [contact me](mailto:info@happylab.at) directly.
+Follow [this link](https://docs.google.com/document/d/1t5jPDgL8XqFpP_TkmDCxZwWgO7LEPYuMnoNK22gkux8) to find a step-by-step installation and configuration guide.
 
 Keep your Installation up to date
 ---------------------------------
