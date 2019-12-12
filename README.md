@@ -51,7 +51,7 @@ As soon as I find time I’ll write a more detailed documentation. You can [down
 
 #### Configuration prior to the first boot of OctoPrint
 
-With the SD card plugged in to your computer (you may need an adapter for your computer to accept the SD card if it doesn't already include the appropriate slot). You access the card just as you would an external disk or thumb drive mounted on your computer. The files you will need to edit are in the /boot/ directory of the SD card (if you are editing on a Windows or Mac computer, the /boot/ directory will likely be the only directory you can see.) Look in the "boot" directory of the SD card. ***If you are on a Windows computer do not use the standard editor, as it cannot deal properly with Unix formatted files. Use e.g. Notepad++, which is freely available for download.***
+With the SD card plugged in to your computer (you may need an adapter for your computer to accept the SD card if it doesn't already include the appropriate slot). You access the card just as you would an external disk or thumb drive mounted on your computer. The files you will need to edit are in the /boot/ directory of the SD card (if you are editing on a Windows or Mac computer, the /boot/ directory will likely be the only directory you can see.) Look in the "boot" directory of the SD card. ***If you are on a Windows computer do not use the standard editor, as it cannot deal properly with Unix formatted files. Use e.g. [Notepad\+\+](https://notepad-plus-plus.org/downloads/), which is freely available for download.***
 
 #### Configure WIFI
 In the /boot/ directory, open `octopi-wpa-supplicant.txt`, search for the following section and enter your Wifi parameters:
