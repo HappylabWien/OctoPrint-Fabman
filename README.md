@@ -46,7 +46,7 @@ As soon as I find time I’ll write a more detailed documentation. You can [down
 ### Configure your installation
 
 #### Fabman Configuration
-- Set your Fabman Bridge API key. If it doesn’t yet exist, create a new equipment (type 3D printer) in Fabman and create an API key for it. 
+- [Create a Fabman Bridge API key](https://help.fabman.io/article/32-create-a-bridge-api-key). If it doesn’t yet exist, create a new equipment (type 3D printer) in Fabman first and then create an API key for it. 
 - Do not set time based costs in the equipment details in Fabman. Configuration for billing, time or filament based, will be described below.
 
 #### Configuration prior to the first boot of OctoPrint
