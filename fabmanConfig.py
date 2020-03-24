@@ -16,6 +16,7 @@ fabmanConfig('fabman', 'fabman_api_url_base')
 
 fabmanConfig('fabman', 'filament_price_per_meter')
 fabmanConfig('fabman', 'printing_price_per_hour')
+fabmanConfig('fabman', 'min_price_per_job')
 fabmanConfig('fabman', 'charge_partial_jobs')
 
 #fabmanConfig('bridge', 'name') # geht beim boot noch nicht, da namensauflösung noch nicht funktioniert; wird daher im daemon gemacht.

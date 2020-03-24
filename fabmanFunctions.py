@@ -44,6 +44,11 @@ except Exception as e:
 	logging.fatal("Cannot find all parameters in " + yamlFile + " ("  + str(e) + ')')
 	sys.exit(0)
 
+try:
+	min_price_per_job = float(configYaml['plugins']['fabman']['min_price_per_job'])
+except Exception as e: # set default value
+	min_price_per_job = 0.0
+
 octoprint_headers = {'Content-Type': 'application/json',
            'X-Api-Key': '{0}'.format(octoprint_api_token)}
 
@@ -378,12 +383,14 @@ def get_octoprint_settings():
 def get_metadata():
 	global filament_price_per_meter
 	global printing_price_per_hour
+	global min_price_per_job
 	global charge_partial_jobs
 	try:
 		metadata = get_job_info()
-		metadata['state'] = get_printerState()
+		#metadata['state'] = get_printerState()
 		metadata['pricing'] = { 'filament_price_per_meter' : filament_price_per_meter,
 								'printing_price_per_hour' : printing_price_per_hour,
+								'min_price_per_job' : min_price_per_job,
 								'charge_partial_jobs' : charge_partial_jobs }
 		if (filament_price_per_meter > 0.0 or printing_price_per_hour > 0.0):
 			metadata['charge'] = create_charge(metadata)
@@ -395,6 +402,7 @@ def get_metadata():
 def create_charge(metadata): # based on filament usage or time (price set in /boot/fabman-config.txt)
 	global filament_price_per_meter
 	global printing_price_per_hour
+	global min_price_per_job
 	global charge_partial_jobs
 
 	try:
@@ -414,7 +422,7 @@ def create_charge(metadata): # based on filament usage or time (price set in /bo
 		seconds = get_busyTime()
 		priceFilament = meter * filament_price_per_meter
 		priceTime = float(seconds) * printing_price_per_hour/3600
-		price = priceFilament + priceTime
+		price = max(min_price_per_job, priceFilament + priceTime)
 		
 		if (charge_partial_jobs == False and completion != 100):
 			price = 0
