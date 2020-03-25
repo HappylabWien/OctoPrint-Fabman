@@ -88,6 +88,7 @@ fabman_api_token = 8c2b2746-d235-4f7e-b525-9438b52a4c22
 fabman_api_url_base = https://fabman.io/api/v1/
 filament_price_per_meter = 0.55
 printing_price_per_hour = 1.2
+min_price_per_job = 0.0
 charge_partial_jobs = true
 ```
 The following values have to be set according to your installation:
@@ -95,6 +96,7 @@ The following values have to be set according to your installation:
 - `[fabman]` / `fabman_api_token`: Find [here](https://help.fabman.io/article/32-create-a-bridge-api-key) how to create the API token
 - `[fabman]` / `filament_price_per_meter`: If you plan to charge according to filament used, set the price per meter here. If you do not need this feature, set the price to `0` (do not delete the parameter).
 - `[fabman]` / `printing_price_per_hour`:  If you plan to charge according to printing time, set the price per hour here. Heat up time or pauses are not counted. If you do not need this feature, set the price to `0` (do not delete the parameter).
+- `[fabman]` / `min_price_per_job`:  Here you can set a minimum price per print job.
 - `[fabman]` / `Charge_partial_jobs`: Set `true`, if you want to charge uncompleted/cancelled jobs aliquotely. Set `false`, if only 100% completed job shall be charged.
 
 #### Octoprint Settings
