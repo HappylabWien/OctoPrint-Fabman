@@ -580,7 +580,7 @@ def bridge_stop():
         
         api_url = '{0}bridge/stop'.format(fabman_api_url_base)
         
-        if (metadata == False or metadata["progress"]["completion"] == None): # do not set metadata if no data available
+        if (metadata == False or metadata["progress"]["completion"] is None): # do not set metadata if no data available
             data = { "stopType": "normal", "currentSession": { "id": sessionId, "idleDurationSeconds": idleTime } }
         else: # set metadata, if available
             try:
@@ -609,7 +609,7 @@ def bridge_update(metadata):
         
         api_url = '{0}bridge/update'.format(fabman_api_url_base)
         
-        if (metadata == False): # do not set metadata if no data available
+        if (metadata == False or metadata["progress"]["completion"] is None): # do not set metadata if no data available
             data = { "session": { "id": sessionId, "idleDurationSeconds": idleTime } }
         else: # set metadata, if available
             try:
